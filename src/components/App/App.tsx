@@ -5,7 +5,7 @@ import Loader from "../Loader/Loader";
 import ErrorMessage from "../ErrorMessage/ErrorMessage";
 import MovieModal from "../MovieModal/MovieModal";
 import type { Movie } from "../../types/movie";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { fetchMovies } from "../../services/movieService";
 import toast, { Toaster } from "react-hot-toast";
 import { useQuery } from "@tanstack/react-query";
@@ -27,12 +27,20 @@ export default function App() {
     setPage(1);
   };
 
-  const { data, isLoading, isError } = useQuery<FetchMoviesResponse, Error>({
+  const { data, isLoading, isError, isSuccess } = useQuery<
+    FetchMoviesResponse,
+    Error
+  >({
     queryKey: ["movies", query, page],
     queryFn: () => fetchMovies(query, page),
     enabled: query.length > 0,
     placeholderData: (prev) => prev,
   });
+  useEffect(() => {
+    if (isSuccess && data && data.results.length === 0) {
+      toast("No movies found for your request.");
+    }
+  }, [isSuccess, data]);
 
   return (
     <div className={styles.app}>
