@@ -8,10 +8,11 @@ import type { Movie } from "../../types/movie";
 import { useEffect, useState } from "react";
 import { fetchMovies } from "../../services/movieService";
 import toast, { Toaster } from "react-hot-toast";
-import { useQuery } from "@tanstack/react-query";
 import ReactPaginate from "react-paginate";
 import type { FetchMoviesResponse } from "../../services/movieService";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 
+type PageChangeEvent = { selected: number };
 export default function App() {
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
@@ -26,6 +27,9 @@ export default function App() {
     setQuery(newQuery);
     setPage(1);
   };
+  const handlePageChange = ({ selected }: PageChangeEvent) => {
+    setPage(selected + 1);
+  };
 
   const { data, isLoading, isError, isSuccess } = useQuery<
     FetchMoviesResponse,
@@ -34,7 +38,7 @@ export default function App() {
     queryKey: ["movies", query, page],
     queryFn: () => fetchMovies(query, page),
     enabled: query.length > 0,
-    placeholderData: (prev) => prev,
+    placeholderData: keepPreviousData,
   });
   useEffect(() => {
     if (isSuccess && data && data.results.length === 0) {
@@ -57,7 +61,7 @@ export default function App() {
               pageCount={data.total_pages}
               pageRangeDisplayed={5}
               marginPagesDisplayed={1}
-              onPageChange={({ selected }) => setPage(selected + 1)}
+              onPageChange={handlePageChange}
               forcePage={page - 1}
               containerClassName={styles.pagination}
               activeClassName={styles.active}
